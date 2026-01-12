@@ -86,6 +86,94 @@ function App() {
   }
 
   /**
+   * Saves a weather search to the Supabase database
+   * This function runs asynchronously and does not block the UI
+   * Errors are logged to console but not shown to the user
+   * 
+   * @param {string} city - The city name that was searched
+   * @param {Object} weatherData - The weather data object from the API
+   */
+  const saveSearchToDatabase = async (city, weatherData) => {
+    try {
+      // Get the current session - the Supabase client uses this automatically for RLS
+      // RLS policy evaluates auth.uid() from the session token in the request headers
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError) {
+        console.error('Error getting session for database insert:', sessionError)
+        return
+      }
+
+      if (!session || !session.user) {
+        console.log('No active session - skipping database insert')
+        return
+      }
+
+      // Get the authenticated user's ID from the session
+      // RLS policy requires: auth.uid() = user_id
+      // The Supabase client automatically includes the session token in requests
+      // auth.uid() in the RLS policy will extract the user ID from the JWT token
+      const userId = session.user.id
+
+      // Verify session has access token (required for RLS)
+      if (!session.access_token) {
+        console.error('Session missing access token - cannot authenticate database request')
+        return
+      }
+
+      // Extract temperature and weather description from API response
+      const temperature = weatherData.main?.temp
+      const weatherDescription = weatherData.weather?.[0]?.main || weatherData.weather?.[0]?.description || 'Unknown'
+
+      // Prepare the insert payload
+      // The user_id must match auth.uid() from the session token for RLS to allow the insert
+      const insertPayload = {
+        user_id: userId,
+        city: city,
+        temperature: temperature,
+        weather: weatherDescription
+      }
+
+      // Debug logging to verify data before insert
+      console.log('Attempting to insert search:', {
+        userId: userId,
+        userIdType: typeof userId,
+        city: city,
+        temperature: temperature,
+        weather: weatherDescription,
+        hasAccessToken: !!session.access_token
+      })
+
+      // Insert the search into the user_searches table
+      // The Supabase client automatically includes the session's access_token in the Authorization header
+      // RLS policy evaluates: auth.uid() (from JWT) = user_id (from insert payload)
+      const { data, error } = await supabase
+        .from('user_searches')
+        .insert(insertPayload)
+        .select()
+
+      // Log errors to console for debugging, but don't show to user
+      if (error) {
+        console.error('Error saving search to database:', error)
+        console.error('Error details:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        })
+        console.error('Session user ID:', userId)
+        console.error('Insert payload:', insertPayload)
+      } else {
+        console.log('Successfully saved search to database:', data)
+      }
+    } catch (err) {
+      // Catch any unexpected errors and log them
+      // This ensures database errors don't break the application
+      console.error('Unexpected error saving search to database:', err)
+    }
+  }
+
+  /**
    * Handles the search form submission
    * Fetches weather data from the backend API
    * @param {string} city - The city name to search for
@@ -109,6 +197,15 @@ function App() {
       // Parse JSON response
       const data = await response.json()
       setWeatherData(data)
+
+      // Save search to database if user is authenticated
+      // This runs asynchronously and won't block the UI or break weather display if it fails
+      // We check user state, but saveSearchToDatabase will verify the session directly
+      if (user && user.id) {
+        // Fire-and-forget: don't await this to avoid blocking UI
+        // The function will get the user ID from the active session for RLS compatibility
+        saveSearchToDatabase(city, data)
+      }
     } catch (err) {
       // Handle errors (network, parsing, etc.)
       setError(err.message || 'Failed to fetch weather data')
