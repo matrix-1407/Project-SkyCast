@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
 import Header from './components/Header'
 import SearchForm from './components/SearchForm'
 import ResultCard from './components/ResultCard'
 import AuthForm from './components/AuthForm'
 import { supabase } from './supabaseClient'
+import { useEffect, useState } from "react";
+
 
 /**
  * Main App Component
@@ -24,6 +25,13 @@ function App() {
   const [showAuthForm, setShowAuthForm] = useState(false)
   // State to track initial auth check (prevents flash of wrong UI)
   const [authLoading, setAuthLoading] = useState(true)
+
+  // Stores previous weather searches of logged-in user
+  const [previousSearches, setPreviousSearches] = useState([]);
+
+  // Loading state while fetching history
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
 
   /**
    * Effect hook to check authentication state on component mount
@@ -55,6 +63,18 @@ function App() {
     // Cleanup: unsubscribe when component unmounts to prevent memory leaks
     return () => subscription.unsubscribe()
   }, [])
+
+  /**
+  * Load previous searches whenever user logs in or changes
+  */
+  useEffect(() => {
+    if (user && user.id) {
+      fetchPreviousSearches(user.id)
+    } else {
+      setPreviousSearches([])
+    }
+  }, [user])
+
 
   /**
    * Handles successful authentication
@@ -178,6 +198,32 @@ function App() {
    * Fetches weather data from the backend API
    * @param {string} city - The city name to search for
    */
+
+    /**
+   * Fetch last 5 previous weather searches for the logged-in user
+   * Uses Supabase Row Level Security (RLS)
+   */
+  const fetchPreviousSearches = async (userId) => {
+    setLoadingHistory(true)
+
+    const { data, error } = await supabase
+      .from('user_searches')
+      .select('city, temperature, weather, created_at')
+      .eq('user_id', userId) // Ensures only user's own data
+      .order('created_at', { ascending: false })
+      .limit(5)
+
+    if (error) {
+      console.error('Error fetching previous searches:', error)
+      setPreviousSearches([])
+    } else {
+      setPreviousSearches(data)
+    }
+
+    setLoadingHistory(false)
+  }
+
+
   const handleSearch = async (city) => {
     // Reset previous error and data
     setError(null)
@@ -247,6 +293,30 @@ function App() {
           </div>
         )}
         {weatherData && <ResultCard data={weatherData} />}
+        {/* Previous Searches - visible only when logged in */}
+        {user && (
+          <div style={{ marginTop: '20px' }}>
+            <h3>Previous Searches</h3>
+
+            {loadingHistory && <p>Loading previous searches...</p>}
+
+            {!loadingHistory && previousSearches.length === 0 && (
+              <p>No previous searches found.</p>
+            )}
+
+            <ul>
+              {previousSearches.map((search, index) => (
+                <li key={index}>
+                  <strong>{search.city}</strong> — {search.temperature}°C, {search.weather}
+                  <br />
+                  <small>
+                    {new Date(search.created_at).toLocaleString()}
+                  </small>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </main>
     </div>
   )
