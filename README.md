@@ -1,34 +1,92 @@
-# task1-skycast
+# 🌤️ SkyCast – Weather Application (Task 1)
 
-A full-stack weather application built with React + Vite frontend and Express backend. This project demonstrates server-side API proxying for secure weather data fetching.
+SkyCast is a full-stack weather application that allows users to search real-time weather information for any city.  
+This project was developed as **Task 1** during a **Full Stack Web Development Internship** to demonstrate frontend, backend, database integration, and cloud deployment.
+
+
+## 📌 Internship Details
+
+- **Company**: CODTECH IT SOLUTIONS  
+- **Intern Name**: Mrudul Bokade  
+- **Intern ID**: CTIS2677  
+- **Domain**: Full Stack Web Development  
+- **Duration**: 4 Weeks  
+- **Mentor**: Neela Santosh  
+
+
+## 🚀 Project Overview
+
+SkyCast provides real-time weather data using a clean and modern user interface.  
+The application uses a **serverless backend** to securely fetch weather data and integrates **Supabase** for authentication and storing user search history.
+
+The project focuses on simplicity, security, and scalability while following industry best practices.
+
+
+## ✨ Features
+
+- 🌍 Search weather by city name  
+- 🌡️ Displays temperature, condition, humidity, and wind speed  
+- 🔐 Secure server-side API (API key not exposed)  
+- 👤 User authentication using Supabase  
+- 🕘 Stores previous searches for logged-in users  
+- 📱 Responsive and mobile-friendly UI  
+- ☁️ Deployed on Vercel using serverless functions  
+
+---
 
 ## Project Structure
 
 ```
 task1-skycast/
-├── frontend/          # React + Vite frontend application
-├── backend/           # Express API server
-├── .env.example       # Environment variables template
-├── vercel.json        # Vercel deployment configuration
-└── README.md          # This file
+├── frontend/ # React + Vite frontend
+│ ├── src/
+│ ├── package.json
+│ └── vite.config.js
+│
+├── api/ # Serverless backend (Vercel)
+│ └── weather.js
+│
+├── backend/ # Reserved for future tasks
+├── .env.example # Environment variables template
+├── README.md
 ```
 
-## Features
-
-- 🌤️ Weather search by city name
-- 🔒 Secure server-side API proxy (hides API keys from frontend)
-- 📱 Mobile-first responsive design
-- ⚡ Fast development with Vite
-- 🚀 Ready for Vercel serverless deployment
+---
 
 ## Tech Stack
 
-- **Frontend**: React 18, Vite, Plain JavaScript
-- **Build Tool**: Vite
-- **Backend**: Node.js, Express
-- **Deployment**: Vercel (Serverless)
-- **API**: OpenWeatherMap Current Weather API
-- **Future**: Supabase (Auth + Database)
+### Frontend
+- React (Vite)
+- Plain JavaScript
+- HTML5, CSS3
+
+### Backend
+- Vercel Serverless Functions (Node.js)
+
+### Database & Authentication
+- Supabase (PostgreSQL + Auth)
+
+### API
+- OpenWeatherMap (Free Tier)
+
+### Deployment
+- Vercel
+
+
+## 📈 Learning Outcomes
+- Full-stack application development
+- Secure API integration
+- Supabase authentication and database usage
+- Serverless backend deployment
+- Git & GitHub workflow
+- Debugging real-world deployment issues
+
+---
+
+## Output
+<img width="1921" height="1309" alt="Image" src="https://github.com/user-attachments/assets/d5cadf10-91d4-42eb-a12a-59ad468af860" />
+
+---
 
 ## License
 
