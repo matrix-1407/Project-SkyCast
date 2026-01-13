@@ -15,7 +15,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: "City is required" });
       }
   
-      const API_KEY = process.env.VITE_WEATHER_API_KEY;
+      const API_KEY = process.env.WEATHER_API_KEY;
   
       if (!API_KEY) {
         console.error("Missing API key");
